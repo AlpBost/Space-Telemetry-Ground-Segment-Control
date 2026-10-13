@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="a3dab645-9da4-4155-a4ac-71e063e5467d" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/../BallerGuess/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../BallerGuess/.idea/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../BallerGuess/.idea/AndroidProjectSystem.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../BallerGuess/.idea/codeStyles/Project.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../BallerGuess/.idea/codeStyles/codeStyleConfig.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../BallerGuess/.idea/compiler.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../BallerGuess/.idea/deploymentTargetSelector.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../BallerGuess/.idea/deviceManager.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../BallerGuess/.idea/gradle.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../BallerGuess/.idea/misc.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../BallerGuess/.idea/runConfigurations.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../BallerGuess/.idea/runConfigurations/main_dart.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../BallerGuess/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../taratye/MovieClue AI/.idea/modules/movieclue-ai.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../taratye/MovieClue AI/.idea/modules/movieclue-ai.main.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../taratye/MovieClue AI/.idea/modules/movieclue-ai.test.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../taratye/MovieClue AI/MovieClue AI.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../taratye/MovieClue AI/src/main/java/com/movieclue/MovieClueApplication.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../taratye/MovieClue AI/src/main/java/com/movieclue/config/CorsConfig.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../taratye/MovieClue AI/src/main/java/com/movieclue/controller/AuthController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../taratye/MovieClue AI/src/main/java/com/movieclue/controller/HealthController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../taratye/MovieClue AI/src/main/java/com/movieclue/controller/MovieController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../taratye/MovieClue AI/src/main/java/com/movieclue/controller/RecommendationController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../taratye/MovieClue AI/src/main/java/com/movieclue/controller/UserMovieController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../taratye/MovieClue AI/src/main/java/com/movieclue/dto/AuthRequest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../taratye/MovieClue AI/src/main/java/com/movieclue/dto/AuthResponse.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../taratye/MovieClue AI/src/main/java/com/movieclue/dto/FilterDto.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../taratye/MovieClue AI/src/main/java/com/movieclue/dto/MovieRecommendationDto.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../taratye/MovieClue AI/src/main/java/com/movieclue/dto/RegisterRequest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../taratye/MovieClue AI/src/main/java/com/movieclue/dto/SearchRequest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../taratye/MovieClue AI/src/main/java/com/movieclue/dto/SearchResponse.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../taratye/MovieClue AI/src/main/java/com/movieclue/dto/UserDto.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../taratye/MovieClue AI/src/main/java/com/movieclue/dto/UserInteractionDto.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../taratye/MovieClue AI/src/main/java/com/movieclue/dto/UserInteractionRequest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../taratye/MovieClue AI/src/main/java/com/movieclue/dto/WatchProviderDto.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../taratye/MovieClue AI/src/main/java/com/movieclue/entity/InteractionType.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../taratye/MovieClue AI/src/main/java/com/movieclue/entity/Movie.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../taratye/MovieClue AI/src/main/java/com/movieclue/entity/User.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../taratye/MovieClue AI/src/main/java/com/movieclue/entity/UserMovieInteraction.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../taratye/MovieClue AI/src/main/java/com/movieclue/repository/MovieRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../taratye/MovieClue AI/src/main/java/com/movieclue/repository/UserMovieInteractionRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../taratye/MovieClue AI/src/main/java/com/movieclue/repository/UserRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../taratye/MovieClue AI/src/main/java/com/movieclue/security/JwtAuthenticationFilter.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../taratye/MovieClue AI/src/main/java/com/movieclue/security/JwtUtil.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../taratye/MovieClue AI/src/main/java/com/movieclue/security/SecurityConfig.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../taratye/MovieClue AI/src/main/java/com/movieclue/security/UserDetailsServiceImpl.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../taratye/MovieClue AI/src/main/java/com/movieclue/service/AuthService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../taratye/MovieClue AI/src/main/java/com/movieclue/service/HybridSearchService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../taratye/MovieClue AI/src/main/java/com/movieclue/service/IntentParserService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../taratye/MovieClue AI/src/main/java/com/movieclue/service/MovieSeederService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../taratye/MovieClue AI/src/main/java/com/movieclue/service/UserMovieService.java" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 8
+}]]></component>
+  <component name="ProjectId" id="3KeJdWOrP1YVnpCNxroK0RJsjKg" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "Python.run.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "master",
+    "last_opened_file_path": "C:/Users/HP/Desktop/Aerospace"
+  }
+}]]></component>
+  <component name="RunManager" selected="Python.run">
+    <configuration name="main" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
+      <module name="Aerospace" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="RUN_TOOL" value="" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/main.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="run" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Aerospace" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Backend" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="RUN_TOOL" value="" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Backend/run.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.run" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-python-sdk-0978a7220b69-9867c7d4c0a4-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-253.28294.336" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="a3dab645-9da4-4155-a4ac-71e063e5467d" name="Changes" comment="" />
+      <created>1791912187269</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1791912187269</updated>
+    </task>
+    <servers />
+  </component>
+</project>
