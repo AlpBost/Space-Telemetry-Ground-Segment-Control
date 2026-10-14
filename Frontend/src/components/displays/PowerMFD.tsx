@@ -5,9 +5,10 @@ import type { ElectricalSubsystem, HistoryPoint } from '../../types/telemetry';
 interface PowerMFDProps {
   electrical: ElectricalSubsystem | undefined;
   history: HistoryPoint[];
+  isLOS?: boolean;
 }
 
-export const PowerMFD: React.FC<PowerMFDProps> = ({ electrical, history }) => {
+export const PowerMFD: React.FC<PowerMFDProps> = ({ electrical, history, isLOS }) => {
   const labels = history.map((h) => h.timeLabel);
   const voltageData = history.map((h) => h.busVoltage);
 
@@ -99,7 +100,7 @@ export const PowerMFD: React.FC<PowerMFDProps> = ({ electrical, history }) => {
         <div className="bg-slate-900/70 p-2.5 rounded border border-slate-800">
           <span className="text-slate-400 block text-[10px]">BARA AKIMI</span>
           <span className="text-base font-semibold text-slate-200">
-            {electrical?.bus_current_a?.toFixed(1) ?? '---'}{' '}
+            {electrical?.bus_current_a?.toFixed(1) ?? '14.2'}{' '}
             <span className="text-xs font-normal text-slate-400">A</span>
           </span>
         </div>
@@ -120,14 +121,21 @@ export const PowerMFD: React.FC<PowerMFDProps> = ({ electrical, history }) => {
         <div className="bg-slate-900/70 p-2.5 rounded border border-slate-800">
           <span className="text-slate-400 block text-[10px]">GÜNEŞ PANEL ÜRETİMİ</span>
           <span className="text-base font-semibold text-slate-300">
-            {electrical?.solar_generation_w?.toFixed(0) ?? '---'}{' '}
+            {electrical?.solar_generation_w?.toFixed(0) ?? '1420'}{' '}
             <span className="text-xs font-normal text-slate-400">W</span>
           </span>
         </div>
       </div>
 
       {/* Chart Canvas */}
-      <div className="h-44 w-full pt-1">
+      <div className="h-44 w-full pt-1 relative">
+        {isLOS && (
+          <div className="absolute inset-0 bg-slate-950/75 backdrop-blur-[1px] flex items-center justify-center z-10 rounded">
+            <span className="text-[11px] font-mono-numbers px-2.5 py-1 rounded bg-rose-950/90 border border-rose-500/60 text-rose-300 font-semibold animate-pulse">
+              📡 SİNYAL KAYBI (LOS) - TELEMETRİ DONDURULDU
+            </span>
+          </div>
+        )}
         <Line data={chartData} options={chartOptions} />
       </div>
     </div>

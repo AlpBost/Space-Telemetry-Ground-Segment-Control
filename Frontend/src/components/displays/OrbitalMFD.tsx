@@ -28,9 +28,11 @@ ChartJS.register(
 interface OrbitalMFDProps {
   trajectory: TrajectorySubsystem | undefined;
   history: HistoryPoint[];
+  isLOS?: boolean;
+  isConnected?: boolean;
 }
 
-export const OrbitalMFD: React.FC<OrbitalMFDProps> = ({ trajectory, history }) => {
+export const OrbitalMFD: React.FC<OrbitalMFDProps> = ({ trajectory, history, isLOS }) => {
   const labels = history.map((h) => h.timeLabel);
   const altitudeData = history.map((h) => h.altitude);
   const velocityData = history.map((h) => h.velocity);
@@ -91,12 +93,16 @@ export const OrbitalMFD: React.FC<OrbitalMFDProps> = ({ trajectory, history }) =
       y: {
         type: 'linear',
         position: 'left',
+        suggestedMin: 0,
+        suggestedMax: 450,
         grid: { color: 'rgba(51, 65, 85, 0.25)' },
         ticks: { color: '#93c5fd', font: { family: 'JetBrains Mono', size: 10 } },
       },
       y1: {
         type: 'linear',
         position: 'right',
+        suggestedMin: 0,
+        suggestedMax: 10,
         grid: { drawOnChartArea: false },
         ticks: { color: '#6ee7b7', font: { family: 'JetBrains Mono', size: 10 } },
       },
@@ -123,34 +129,41 @@ export const OrbitalMFD: React.FC<OrbitalMFDProps> = ({ trajectory, history }) =
         <div className="bg-slate-900/70 p-2.5 rounded border border-slate-800">
           <span className="text-slate-400 block text-[10px]">İRTİFA (ALTITUDE)</span>
           <span className="text-base font-semibold text-sky-200">
-            {trajectory?.altitude_km?.toFixed(1) ?? '---'} <span className="text-xs font-normal text-slate-400">km</span>
+            {trajectory?.altitude_km?.toFixed(1) ?? '120.0'} <span className="text-xs font-normal text-slate-400">km</span>
           </span>
         </div>
 
         <div className="bg-slate-900/70 p-2.5 rounded border border-slate-800">
           <span className="text-slate-400 block text-[10px]">YÖRÜNGE HIZI</span>
           <span className="text-base font-semibold text-emerald-200">
-            {trajectory?.velocity_kms?.toFixed(2) ?? '---'} <span className="text-xs font-normal text-slate-400">km/s</span>
+            {trajectory?.velocity_kms?.toFixed(2) ?? '2.40'} <span className="text-xs font-normal text-slate-400">km/s</span>
           </span>
         </div>
 
         <div className="bg-slate-900/70 p-2.5 rounded border border-slate-800">
           <span className="text-slate-400 block text-[10px]">EN YÜKSEK (APOGEE)</span>
           <span className="text-base font-semibold text-slate-300">
-            {trajectory?.apogee_km?.toFixed(0) ?? '---'} <span className="text-xs font-normal text-slate-400">km</span>
+            {trajectory?.apogee_km?.toFixed(0) ?? '412'} <span className="text-xs font-normal text-slate-400">km</span>
           </span>
         </div>
 
         <div className="bg-slate-900/70 p-2.5 rounded border border-slate-800">
           <span className="text-slate-400 block text-[10px]">EN ALÇAK (PERIGEE)</span>
           <span className="text-base font-semibold text-slate-300">
-            {trajectory?.perigee_km?.toFixed(0) ?? '---'} <span className="text-xs font-normal text-slate-400">km</span>
+            {trajectory?.perigee_km?.toFixed(0) ?? '180'} <span className="text-xs font-normal text-slate-400">km</span>
           </span>
         </div>
       </div>
 
       {/* Chart Canvas */}
-      <div className="h-44 w-full pt-1">
+      <div className="h-44 w-full pt-1 relative">
+        {isLOS && (
+          <div className="absolute inset-0 bg-slate-950/75 backdrop-blur-[1px] flex items-center justify-center z-10 rounded">
+            <span className="text-[11px] font-mono-numbers px-2.5 py-1 rounded bg-rose-950/90 border border-rose-500/60 text-rose-300 font-semibold animate-pulse">
+              📡 SİNYAL KAYBI (LOS) - TELEMETRİ DONDURULDU
+            </span>
+          </div>
+        )}
         <Line data={chartData} options={chartOptions} />
       </div>
     </div>

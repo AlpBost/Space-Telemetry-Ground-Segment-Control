@@ -5,9 +5,10 @@ import type { ThermalSubsystem, HistoryPoint } from '../../types/telemetry';
 interface ThermalMFDProps {
   thermal: ThermalSubsystem | undefined;
   history: HistoryPoint[];
+  isLOS?: boolean;
 }
 
-export const ThermalMFD: React.FC<ThermalMFDProps> = ({ thermal, history }) => {
+export const ThermalMFD: React.FC<ThermalMFDProps> = ({ thermal, history, isLOS }) => {
   const labels = history.map((h) => h.timeLabel);
   const solarTempData = history.map((h) => h.solarTemp);
 
@@ -101,7 +102,7 @@ export const ThermalMFD: React.FC<ThermalMFDProps> = ({ thermal, history }) => {
             <Cpu className="w-3 h-3 text-sky-300" /> AVİYONİK
           </span>
           <span className="text-base font-semibold text-slate-200">
-            {thermal?.avionics_temp_c?.toFixed(1) ?? '---'}{' '}
+            {thermal?.avionics_temp_c?.toFixed(1) ?? '38.5'}{' '}
             <span className="text-xs font-normal text-slate-400">°C</span>
           </span>
         </div>
@@ -111,7 +112,7 @@ export const ThermalMFD: React.FC<ThermalMFDProps> = ({ thermal, history }) => {
             <Battery className="w-3 h-3 text-purple-300" /> BATARYA HÜCRESİ
           </span>
           <span className="text-base font-semibold text-purple-200">
-            {thermal?.battery_cell_temp_c?.toFixed(1) ?? '---'}{' '}
+            {thermal?.battery_cell_temp_c?.toFixed(1) ?? '28.0'}{' '}
             <span className="text-xs font-normal text-slate-400">°C</span>
           </span>
         </div>
@@ -119,14 +120,21 @@ export const ThermalMFD: React.FC<ThermalMFDProps> = ({ thermal, history }) => {
         <div className="bg-slate-900/70 p-2.5 rounded border border-slate-800">
           <span className="text-slate-400 block text-[10px]">NOZUL BOĞAZI</span>
           <span className="text-base font-semibold text-slate-300">
-            {thermal?.nozzle_throat_temp_c?.toFixed(0) ?? '---'}{' '}
+            {thermal?.nozzle_throat_temp_c?.toFixed(0) ?? '640'}{' '}
             <span className="text-xs font-normal text-slate-400">°C</span>
           </span>
         </div>
       </div>
 
       {/* Chart Canvas */}
-      <div className="h-44 w-full pt-1">
+      <div className="h-44 w-full pt-1 relative">
+        {isLOS && (
+          <div className="absolute inset-0 bg-slate-950/75 backdrop-blur-[1px] flex items-center justify-center z-10 rounded">
+            <span className="text-[11px] font-mono-numbers px-2.5 py-1 rounded bg-rose-950/90 border border-rose-500/60 text-rose-300 font-semibold animate-pulse">
+              📡 SİNYAL KAYBI (LOS) - TELEMETRİ DONDURULDU
+            </span>
+          </div>
+        )}
         <Line data={chartData} options={chartOptions} />
       </div>
     </div>

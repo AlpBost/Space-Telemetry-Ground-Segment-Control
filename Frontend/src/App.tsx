@@ -44,15 +44,34 @@ export function App() {
 
         {/* 4-Multi-Function Displays (MFD Grid) */}
         <main className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <OrbitalMFD trajectory={packet?.trajectory} history={history} />
-          <PropulsionMFD propulsion={packet?.propulsion} history={history} />
-          <ThermalMFD thermal={packet?.thermal} history={history} />
-          <PowerMFD electrical={packet?.electrical} history={history} />
+          <OrbitalMFD
+            trajectory={packet?.trajectory}
+            history={history}
+            isLOS={isLOS}
+            isConnected={isConnected}
+          />
+          <PropulsionMFD
+            propulsion={packet?.propulsion}
+            history={history}
+            isLOS={isLOS}
+          />
+          <ThermalMFD
+            thermal={packet?.thermal}
+            history={history}
+            isLOS={isLOS}
+          />
+          <PowerMFD
+            electrical={packet?.electrical}
+            history={history}
+            isLOS={isLOS}
+          />
         </main>
 
         {/* Tactical Uplink Command & Test-Rig Console */}
         <TacticalCommandPad
           currentMode={currentMode}
+          isConnected={isConnected}
+          isLOS={isLOS}
           onSwitchMode={switchMode}
           onSetRate={setStreamRate}
           onInjectAnomaly={injectAnomaly}

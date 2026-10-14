@@ -107,82 +107,99 @@ class TelemetrySimulator:
         self.throttle_pct = 0.0
 
     def step_live_physics(self):
-        """Advances physical state by dt seconds."""
+        """Advances physical state by dt seconds continuously with realistic multi-phase aerospace dynamics."""
         self.met_seconds += self.dt
         t = self.met_seconds
 
         # Flight Phase Progression
         if self.flight_phase != FlightPhase.ABORT:
-            if self.altitude_km < 180.0:
+            if self.altitude_km < 160.0:
                 self.flight_phase = FlightPhase.BOOST_ASCENT
-            elif self.altitude_km < 350.0:
+            elif self.altitude_km < 390.0:
                 self.flight_phase = FlightPhase.ORBIT_INSERTION
             else:
                 self.flight_phase = FlightPhase.ORBITAL_CRUISE
 
-        # Atmospheric drag and gravity simulation
+        # Atmospheric drag, gravity, and trajectory propagator
         if self.flight_phase == FlightPhase.BOOST_ASCENT:
+            # Stage 1 Boost Ascent: climbing up to 160 km
             self.altitude_km += (self.vertical_speed_ms / 1000.0) * self.dt
             self.downrange_km += (self.horizontal_speed_ms / 1000.0) * self.dt
             self.velocity_kms = (
                 (self.vertical_speed_ms**2 + self.horizontal_speed_ms**2)**0.5 / 1000.0
             )
-            # Deplete propellant gradually
             self.fuel_remaining_pct = max(0.0, self.fuel_remaining_pct - (0.04 * self.dt))
+        elif self.flight_phase == FlightPhase.ORBIT_INSERTION:
+            # Stage 2 Vacuum Burn: accelerating into orbit (160km -> 390km, vel -> 7.66 km/s)
+            self.altitude_km += 0.35 * self.dt
+            self.downrange_km += 5.2 * self.dt
+            self.velocity_kms = min(7.66, self.velocity_kms + 0.035 * self.dt)
+            self.fuel_remaining_pct = max(18.0, self.fuel_remaining_pct - (0.025 * self.dt))
         elif self.flight_phase == FlightPhase.ORBITAL_CRUISE:
-            # Orbital cruise: steady altitude with slight orbital oscillation
-            self.altitude_km = 408.0 + 3.5 * math.sin(t * 0.05)
+            # Continuous Keplerian Low Earth Orbit (LEO ~408 km, ~7.66 km/s)
+            self.altitude_km = 408.0 + 3.5 * math.sin(t * 0.03)
             self.downrange_km += 7.66 * self.dt
-            self.velocity_kms = 7.66 + 0.01 * math.sin(t * 0.1)
-
-        # Dynamic Pressure (Max-Q curve approximation)
-        q_factor = max(0.0, math.exp(-self.altitude_km / 12.0) * (self.velocity_kms**2))
-        dynamic_pressure = round(q_factor * 18.0, 1)
+            self.velocity_kms = 7.66 + 0.015 * math.sin(t * 0.05)
 
         # ----------------- Propulsion Dynamics -----------------
         if self.flight_phase == FlightPhase.ABORT:
             self.chamber_pressure_bar = 0.0
             self.thrust_kn = 0.0
+            self.throttle_pct = 0.0
         elif self.pressure_drop_active:
-            # Drop chamber pressure below nominal limits (<90 bar)
+            # Injected Anomaly: chamber pressure drops below critical limits (<90 bar)
             self.chamber_pressure_bar = max(45.0, self.chamber_pressure_bar - 4.5 * self.dt)
-            self.thrust_kn = max(60.0, self.thrust_kn - 8.0 * self.dt)
+            self.thrust_kn = max(55.0, self.thrust_kn - 8.0 * self.dt)
         else:
-            # Normal combustion oscillation
-            target_pressure = 126.0 if self.flight_phase == FlightPhase.BOOST_ASCENT else 0.0
-            noise = random.gauss(0, 0.4)
+            if self.flight_phase == FlightPhase.BOOST_ASCENT:
+                target_pressure = 126.0
+                target_thrust = 220.0
+                self.throttle_pct = 100.0
+            elif self.flight_phase == FlightPhase.ORBIT_INSERTION:
+                target_pressure = 95.0 # Second stage vacuum combustion
+                target_thrust = 110.0
+                self.throttle_pct = 85.0
+            else:
+                # Orbital Cruise: MECO shutdown, engines cold and idle
+                target_pressure = 0.0
+                target_thrust = 0.0
+                self.throttle_pct = 0.0
+
+            noise = random.gauss(0, 0.4) if target_pressure > 0 else 0.0
             self.chamber_pressure_bar = max(0.0, target_pressure + noise)
-            self.thrust_kn = 220.0 + random.gauss(0, 1.2) if target_pressure > 0 else 0.0
+            self.thrust_kn = max(0.0, target_thrust + (random.gauss(0, 1.0) if target_thrust > 0 else 0.0))
 
         # ----------------- Thermal Dynamics -----------------
-        # Base sinusoidal thermal cycle mimicking sunlit / eclipse passes
-        base_solar_temp = 54.0 + 12.0 * math.sin(t * 0.02)
+        # Day / night orbital pass thermal cycle (~38°C to ~68°C)
+        base_solar_temp = 52.0 + 14.0 * math.sin(t * 0.03)
         if self.thermal_runaway_active:
-            # Rapid heating exceeding 75°C
+            # Anomaly: Rapid heating exceeding 75°C threshold
             self.solar_array_temp_c = min(88.5, self.solar_array_temp_c + 2.5 * self.dt)
         else:
-            # Cooling back towards nominal range (hysteresis clearance test)
+            # Recovery to nominal via hysteresis curve
             if self.solar_array_temp_c > base_solar_temp:
                 self.solar_array_temp_c = max(base_solar_temp, self.solar_array_temp_c - 1.2 * self.dt)
             else:
                 self.solar_array_temp_c = base_solar_temp + random.gauss(0, 0.2)
 
-        self.avionics_temp_c = 38.0 + 2.0 * math.sin(t * 0.03) + random.gauss(0, 0.1)
+        self.avionics_temp_c = 38.0 + 2.5 * math.sin(t * 0.02) + random.gauss(0, 0.1)
         self.battery_cell_temp_c = 28.5 + 1.5 * math.sin(t * 0.01) + random.gauss(0, 0.05)
+        self.nozzle_throat_temp_c = 640.0 if self.thrust_kn > 0 else max(80.0, self.nozzle_throat_temp_c - 1.5 * self.dt)
 
         # ----------------- Electrical Dynamics (EPS) -----------------
         if self.voltage_sag_active:
+            # Injected Anomaly: Bus voltage sags below 24V
             self.bus_voltage_v = max(20.4, self.bus_voltage_v - 0.8 * self.dt)
         else:
-            # Recovery to nominal 28.2V
+            # Regulated 28.2V bus recovery
             if self.bus_voltage_v < 28.2:
                 self.bus_voltage_v = min(28.2, self.bus_voltage_v + 0.4 * self.dt)
             else:
                 self.bus_voltage_v = 28.2 + random.gauss(0, 0.06)
 
         self.bus_current_a = 13.8 + random.gauss(0, 0.15)
-        self.battery_soc_pct = max(15.0, 95.0 - (t * 0.005))
-        self.solar_generation_w = 1520.0 + 80.0 * math.sin(t * 0.02) + random.gauss(0, 5.0)
+        self.battery_soc_pct = max(20.0, 95.0 - (math.sin(t * 0.02) * 6.0))
+        self.solar_generation_w = max(400.0, 1520.0 + 350.0 * math.sin(t * 0.03) + random.gauss(0, 5.0))
 
     def load_csv_dataset(self, records: list[dict]):
         self.csv_records = records

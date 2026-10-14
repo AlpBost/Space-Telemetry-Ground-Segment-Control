@@ -5,13 +5,14 @@ import type { PropulsionSubsystem, HistoryPoint } from '../../types/telemetry';
 interface PropulsionMFDProps {
   propulsion: PropulsionSubsystem | undefined;
   history: HistoryPoint[];
+  isLOS?: boolean;
 }
 
-export const PropulsionMFD: React.FC<PropulsionMFDProps> = ({ propulsion, history }) => {
+export const PropulsionMFD: React.FC<PropulsionMFDProps> = ({ propulsion, history, isLOS }) => {
   const labels = history.map((h) => h.timeLabel);
   const pressureData = history.map((h) => h.chamberPressure);
 
-  const isLowPressure = (propulsion?.chamber_pressure_bar ?? 120) < 90.0 && (propulsion?.chamber_pressure_bar ?? 0) > 0;
+  const isLowPressure = (propulsion?.chamber_pressure_bar ?? 125) < 90.0 && (propulsion?.chamber_pressure_bar ?? 0) > 0;
 
   const chartData = {
     labels,
@@ -91,7 +92,7 @@ export const PropulsionMFD: React.FC<PropulsionMFDProps> = ({ propulsion, histor
               isLowPressure ? 'text-rose-300' : 'text-amber-200'
             }`}
           >
-            {propulsion?.chamber_pressure_bar?.toFixed(1) ?? '---'}{' '}
+            {propulsion?.chamber_pressure_bar?.toFixed(1) ?? '125.0'}{' '}
             <span className="text-xs font-normal text-slate-400">bar</span>
           </span>
         </div>
@@ -99,7 +100,7 @@ export const PropulsionMFD: React.FC<PropulsionMFDProps> = ({ propulsion, histor
         <div className="bg-slate-900/70 p-2.5 rounded border border-slate-800">
           <span className="text-slate-400 block text-[10px]">İTKİ KUVVETİ</span>
           <span className="text-base font-semibold text-slate-200">
-            {propulsion?.thrust_kn?.toFixed(1) ?? '---'}{' '}
+            {propulsion?.thrust_kn?.toFixed(1) ?? '220.0'}{' '}
             <span className="text-xs font-normal text-slate-400">kN</span>
           </span>
         </div>
@@ -107,7 +108,7 @@ export const PropulsionMFD: React.FC<PropulsionMFDProps> = ({ propulsion, histor
         <div className="bg-slate-900/70 p-2.5 rounded border border-slate-800">
           <span className="text-slate-400 block text-[10px]">YAKIT SICAKLIĞI</span>
           <span className="text-base font-semibold text-sky-200">
-            {propulsion?.propellant_temp_c?.toFixed(1) ?? '---'}{' '}
+            {propulsion?.propellant_temp_c?.toFixed(1) ?? '-183.0'}{' '}
             <span className="text-xs font-normal text-slate-400">°C</span>
           </span>
         </div>
@@ -127,7 +128,14 @@ export const PropulsionMFD: React.FC<PropulsionMFDProps> = ({ propulsion, histor
       </div>
 
       {/* Chart Canvas */}
-      <div className="h-44 w-full pt-1">
+      <div className="h-44 w-full pt-1 relative">
+        {isLOS && (
+          <div className="absolute inset-0 bg-slate-950/75 backdrop-blur-[1px] flex items-center justify-center z-10 rounded">
+            <span className="text-[11px] font-mono-numbers px-2.5 py-1 rounded bg-rose-950/90 border border-rose-500/60 text-rose-300 font-semibold animate-pulse">
+              📡 SİNYAL KAYBI (LOS) - TELEMETRİ DONDURULDU
+            </span>
+          </div>
+        )}
         <Line data={chartData} options={chartOptions} />
       </div>
     </div>
