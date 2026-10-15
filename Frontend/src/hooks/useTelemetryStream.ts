@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import type { TelemetryPacket, HistoryPoint } from '../types/telemetry';
 
-const MAX_HISTORY_POINTS = 100;
+const MAX_HISTORY_POINTS = 160;
 const CHART_UPDATE_INTERVAL_MS = 250; // Throttle chart redraws to 4 FPS for maximum responsiveness
 const BACKEND_WS_URL = 'ws://localhost:8000/ws/telemetry';
 const BACKEND_API_BASE = 'http://localhost:8000/api/v1';
@@ -41,28 +41,28 @@ export function useTelemetryStream() {
   const [packetCount, setPacketCount] = useState<number>(0);
   const [corruptedPackets, setCorruptedPackets] = useState<number>(0);
   const [history, setHistory] = useState<HistoryPoint[]>(createInitialHistory);
+  const [packetLogs, setPacketLogs] = useState<TelemetryPacket[]>([]);
 
   const wsRef = useRef<WebSocket | null>(null);
-  const lastSeqIdRef = useRef<number | null>(null);
   const reconnectTimeoutRef = useRef<any>(null);
-  const lastChartUpdateRef = useRef<number>(0);
   const isDestroyedRef = useRef<boolean>(false);
+  const lastSeqIdRef = useRef<number>(-1);
+  const lastChartUpdateRef = useRef<number>(0);
+
+  const clearPacketLogs = useCallback(() => {
+    setPacketLogs([]);
+    setCorruptedPackets(0);
+  }, []);
 
   const connect = useCallback(() => {
     if (isDestroyedRef.current) return;
-    if (wsRef.current && (wsRef.current.readyState === WebSocket.OPEN || wsRef.current.readyState === WebSocket.CONNECTING)) {
-      return;
-    }
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) return;
 
     try {
       const ws = new WebSocket(BACKEND_WS_URL);
       wsRef.current = ws;
 
       ws.onopen = () => {
-        if (isDestroyedRef.current) {
-          ws.close();
-          return;
-        }
         setIsConnected(true);
         setIsLOS(false);
       };
@@ -88,7 +88,10 @@ export function useTelemetryStream() {
 
           lastSeqIdRef.current = tmPacket.header.sequence_id;
 
-          // Throttled Chart Buffer Update (prevents canvas starvation and button freezing)
+          // Append to packet inspector rolling log (last 80 frames)
+          setPacketLogs((prev) => [tmPacket, ...prev.slice(0, 79)]);
+
+          // Throttled Chart Buffer Update
           const nowMs = performance.now();
           if (nowMs - lastChartUpdateRef.current >= CHART_UPDATE_INTERVAL_MS) {
             lastChartUpdateRef.current = nowMs;
@@ -177,6 +180,9 @@ export function useTelemetryStream() {
   }, []);
 
   const injectAnomaly = useCallback(async (anomalyType: string): Promise<CommandResult> => {
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({ action: 'INJECT_ANOMALY', anomaly_type: anomalyType }));
+    }
     try {
       const res = await fetch(`${BACKEND_API_BASE}/commands/inject-anomaly?anomaly_type=${encodeURIComponent(anomalyType)}`, {
         method: 'POST',
@@ -193,6 +199,9 @@ export function useTelemetryStream() {
 
   const clearAnomaly = useCallback(async (anomalyType?: string): Promise<CommandResult> => {
     setIsLOS(false); // Instantly release LOS visual freeze
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({ action: 'CLEAR_ANOMALY', anomaly_type: anomalyType }));
+    }
     try {
       const url = anomalyType
         ? `${BACKEND_API_BASE}/commands/clear-anomaly?anomaly_type=${encodeURIComponent(anomalyType)}`
@@ -223,7 +232,11 @@ export function useTelemetryStream() {
     try {
       const res = await fetch(`${BACKEND_API_BASE}/commands/mode?mode=${encodeURIComponent(mode)}`, { method: 'POST' });
       if (res.ok) {
-        return { success: true, message: `Veri modu: ${mode === 'LIVE_SIMULATION' ? 'CANLI FİZİK SİMÜLASYONU' : 'CSV DOSYA REPLAY'} devrede.` };
+        setHistory([]); // Start drawing clean from left for the 30-second flight
+        return {
+          success: true,
+          message: `Veri modu: ${mode === 'LIVE_SIMULATION' ? 'CANLI FİZİK SİMÜLASYONU' : '30-SANİYELİK CSV FLIGHT REPLAY (T=0)'} devrede.`,
+        };
       }
       return { success: false, message: `Mod değiştirme hatası (Kod: ${res.status})` };
     } catch (e: any) {
@@ -231,28 +244,44 @@ export function useTelemetryStream() {
     }
   }, []);
 
-  const armCommand = useCallback(async (cmdType: string) => {
+  const restartReplay = useCallback(async (): Promise<CommandResult> => {
+    try {
+      const res = await fetch(`${BACKEND_API_BASE}/commands/replay/restart`, { method: 'POST' });
+      if (res.ok) {
+        setHistory([]); // Reset chart view to start at T=0
+        return {
+          success: true,
+          message: 'CSV 30s Uçuş profili T=0 anından baştan başlatıldı.',
+        };
+      }
+      return { success: false, message: `Replay başlatma hatası (Kod: ${res.status})` };
+    } catch (e: any) {
+      return { success: false, message: `Bağlantı hatası: ${e?.message}` };
+    }
+  }, []);
+
+  const armCommand = useCallback(async (cmdType: string): Promise<any> => {
     try {
       const res = await fetch(`${BACKEND_API_BASE}/commands/arm?cmd_type=${encodeURIComponent(cmdType)}`, {
         method: 'POST',
       });
       return await res.json();
     } catch (e) {
-      console.error('Failed to arm command:', e);
+      console.error('Arm command error:', e);
       return null;
     }
   }, []);
 
-  const fireCommand = useCallback(async (req: any) => {
+  const fireCommand = useCallback(async (payload: any): Promise<any> => {
     try {
       const res = await fetch(`${BACKEND_API_BASE}/commands/fire`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(req),
+        body: JSON.stringify(payload),
       });
       return await res.json();
     } catch (e) {
-      console.error('Failed to fire command:', e);
+      console.error('Fire command error:', e);
       return null;
     }
   }, []);
@@ -264,11 +293,14 @@ export function useTelemetryStream() {
     packetCount,
     corruptedPackets,
     history,
+    packetLogs,
+    clearPacketLogs,
     ackAlarm,
     injectAnomaly,
     clearAnomaly,
     setStreamRate,
     switchMode,
+    restartReplay,
     armCommand,
     fireCommand,
   };

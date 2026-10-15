@@ -15,7 +15,7 @@ from app.models.command import (
 )
 from app.services.telemetry_generator import telemetry_simulator
 from app.services.fdir_engine import fdir_engine
-from app.routers.telemetry_ws import set_stream_frequency
+from app.routers.telemetry_ws import set_stream_frequency, load_initial_csv
 
 router = APIRouter(prefix="/commands", tags=["Telecommand"])
 
@@ -78,16 +78,18 @@ async def fire_command(request: TelecommandRequest):
 
 
 @router.post("/inject-anomaly")
-async def quick_inject_anomaly(anomaly_type: AnomalyType):
+async def quick_inject_anomaly(anomaly_type: str):
     """Direct anomaly injection for testing without two-man rule."""
-    telemetry_simulator.inject_anomaly(anomaly_type.value)
-    return {"status": "SUCCESS", "injected": anomaly_type.value}
+    clean_type = anomaly_type.strip().upper()
+    telemetry_simulator.inject_anomaly(clean_type)
+    return {"status": "SUCCESS", "injected": clean_type}
 
 
 @router.post("/clear-anomaly")
 async def clear_anomaly(anomaly_type: Optional[str] = None):
-    telemetry_simulator.clear_anomaly(anomaly_type)
-    return {"status": "SUCCESS", "cleared": anomaly_type or "ALL"}
+    clean_type = anomaly_type.strip().upper() if anomaly_type else None
+    telemetry_simulator.clear_anomaly(clean_type)
+    return {"status": "SUCCESS", "cleared": clean_type or "ALL"}
 
 
 @router.post("/mode")
@@ -96,8 +98,20 @@ async def set_simulation_mode(mode: str):
     target = mode.upper()
     if target not in ["LIVE_SIMULATION", "CSV_REPLAY"]:
         raise HTTPException(status_code=400, detail="Mod 'LIVE_SIMULATION' veya 'CSV_REPLAY' olmalıdır.")
+    if target == "CSV_REPLAY":
+        load_initial_csv()
+        telemetry_simulator.reset_csv_replay()
     telemetry_simulator.set_mode(target)
     return {"status": "SUCCESS", "mode": target}
+
+
+@router.post("/replay/restart")
+async def restart_csv_replay():
+    """Rewinds CSV replay to the launchpad (T=0) for a fresh 30-second flight."""
+    load_initial_csv()
+    telemetry_simulator.reset_csv_replay()
+    telemetry_simulator.set_mode("CSV_REPLAY")
+    return {"status": "SUCCESS", "message": "CSV Uçuş Replay T=0 anından tekrar başlatıldı."}
 
 
 @router.post("/rate")

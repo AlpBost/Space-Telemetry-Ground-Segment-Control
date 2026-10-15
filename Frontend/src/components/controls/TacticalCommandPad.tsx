@@ -16,12 +16,14 @@ import {
   RotateCcw,
 } from 'lucide-react';
 import type { CommandResult } from '../../hooks/useTelemetryStream';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 interface TacticalCommandPadProps {
   currentMode: 'LIVE_SIMULATION' | 'CSV_REPLAY';
   isConnected: boolean;
   isLOS: boolean;
   onSwitchMode: (mode: 'LIVE_SIMULATION' | 'CSV_REPLAY') => Promise<CommandResult>;
+  onRestartReplay?: () => Promise<CommandResult>;
   onSetRate: (hz: number) => Promise<CommandResult>;
   onInjectAnomaly: (type: string) => Promise<CommandResult>;
   onClearAnomaly: (type?: string) => Promise<CommandResult>;
@@ -34,12 +36,14 @@ export const TacticalCommandPad: React.FC<TacticalCommandPadProps> = ({
   isConnected,
   isLOS,
   onSwitchMode,
+  onRestartReplay,
   onSetRate,
   onInjectAnomaly,
   onClearAnomaly,
   onArmCommand,
   onFireCommand,
 }) => {
+  const { t, language } = useLanguage();
   const [selectedRate, setSelectedRate] = useState<number>(10);
   const [armedToken, setArmedToken] = useState<string | null>(null);
   const [armCountdown, setArmCountdown] = useState<number>(0);
@@ -55,28 +59,46 @@ export const TacticalCommandPad: React.FC<TacticalCommandPadProps> = ({
 
   const handleArmAbort = async () => {
     if (!isConnected) {
-      showFeedback('Hata: Backend (FastAPI) bağlı değil! Lütfen Backend/run.py dosyasını çalıştırın.', 'error');
+      showFeedback(
+        language === 'tr'
+          ? 'Hata: Yer İstasyonu sunucusuna bağlanılamadı. Lütfen Backend/run.py dosyasını çalıştırın.'
+          : 'Error: Cannot connect to Backend server. Please ensure Backend/run.py is running.',
+        'error'
+      );
       return;
     }
     const res = await onArmCommand('EMERGENCY_ABORT');
     if (res && res.armed_token) {
       setArmedToken(res.armed_token);
       setArmCountdown(30);
-      showFeedback(`SİSTEM SİLAHLANDIRILDI (ARMED). Onay Token: ${res.armed_token}`, 'error');
+      showFeedback(
+        language === 'tr'
+          ? `SİSTEM ETKİNLEŞTİRİLDİ (Onay Kodu: ${res.armed_token})`
+          : `SYSTEM ARMED (Confirmation Token: ${res.armed_token})`,
+        'error'
+      );
 
       const timer = setInterval(() => {
         setArmCountdown((prev) => {
           if (prev <= 1) {
             clearInterval(timer);
             setArmedToken(null);
-            showFeedback('ARM süresi doldu. Sistem otomatik kilitlendi.', 'info');
+            showFeedback(
+              language === 'tr'
+                ? 'Doğrulama süresi doldu. Sistem güvenliğe alındı.'
+                : 'Arm window timed out. System auto-locked.',
+              'info'
+            );
             return 0;
           }
           return prev - 1;
         });
       }, 1000);
     } else {
-      showFeedback('Arm komutu gönderilemedi. Sunucu hatası.', 'error');
+      showFeedback(
+        language === 'tr' ? 'Komut gönderilemedi. Sunucu hatası.' : 'Failed to send arm command. Server error.',
+        'error'
+      );
     }
   };
 
@@ -89,9 +111,18 @@ export const TacticalCommandPad: React.FC<TacticalCommandPadProps> = ({
     setArmedToken(null);
     setArmCountdown(0);
     if (res && res.status === 'EXECUTED') {
-      showFeedback(res.message || 'ACİL DURUM İPTALİ (ABORT) YÜRÜTÜLDÜ.', 'success');
+      showFeedback(
+        res.message ||
+          (language === 'tr'
+            ? 'ACİL DURUM İPTAL MANEVRASI GERÇEKLEŞTİRİLDİ.'
+            : 'EMERGENCY ABORT MANEUVER EXECUTED.'),
+        'success'
+      );
     } else {
-      showFeedback('Fırlatma onayı başarısız veya reddedildi.', 'error');
+      showFeedback(
+        language === 'tr' ? 'Fırlatma onayı başarısız veya reddedildi.' : 'Execution failed or rejected.',
+        'error'
+      );
     }
   };
 
@@ -106,11 +137,21 @@ export const TacticalCommandPad: React.FC<TacticalCommandPadProps> = ({
     showFeedback(res.message, res.success ? 'success' : 'error');
   };
 
-  const handleInject = async (type: string, desc: string) => {
+  const handleRestart = async () => {
+    if (onRestartReplay) {
+      const res = await onRestartReplay();
+      showFeedback(res.message, res.success ? 'success' : 'error');
+    }
+  };
+
+  const handleInject = async (type: string, descTr: string, descEn: string) => {
     setActiveAnomaly(type);
     const res = await onInjectAnomaly(type);
     if (res.success) {
-      showFeedback(`[ANOMALİ DEVREDE] ${desc}`, 'error');
+      showFeedback(
+        language === 'tr' ? `[ANOMALİ DEVREDE] ${descTr}` : `[FAULT INJECTED] ${descEn}`,
+        'error'
+      );
     } else {
       showFeedback(res.message, 'error');
     }
@@ -120,7 +161,12 @@ export const TacticalCommandPad: React.FC<TacticalCommandPadProps> = ({
     setActiveAnomaly(null);
     const res = await onClearAnomaly();
     if (res.success) {
-      showFeedback('✅ Tüm anomaliler başarıyla temizlendi. Sistem normale dönüyor.', 'success');
+      showFeedback(
+        language === 'tr'
+          ? 'Tüm anomaliler temizlendi. Sistem normale dönüyor.'
+          : 'All anomalies cleared. Systems returning to nominal.',
+        'success'
+      );
     } else {
       showFeedback(res.message, 'error');
     }
@@ -133,7 +179,12 @@ export const TacticalCommandPad: React.FC<TacticalCommandPadProps> = ({
         <div className="mb-3 px-3 py-2 rounded bg-rose-950/60 border border-rose-500/50 text-rose-300 text-xs font-mono-numbers flex items-center justify-between">
           <div className="flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 animate-bounce" />
-            <span><strong>DİKKAT (OFFLINE):</strong> Backend sunucusu (http://localhost:8000) ile bağlantı kurulamadı. Butonların çalışması için Backend terminalden başlatılmalıdır.</span>
+            <span>
+              <strong>{language === 'tr' ? 'DİKKAT:' : 'WARNING:'}</strong> {t.commands.offlineWarning}{' '}
+              {language === 'tr'
+                ? 'Komutların çalışması için Backend terminalden başlatılmalıdır.'
+                : 'Start the Backend server via terminal for controls to respond.'}
+            </span>
           </div>
           <span className="text-[11px] underline">python run.py</span>
         </div>
@@ -144,7 +195,7 @@ export const TacticalCommandPad: React.FC<TacticalCommandPadProps> = ({
         <div className="flex items-center gap-2">
           <Sliders className="w-4 h-4 text-sky-300" />
           <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-200">
-            KOMUTA KONTROL & DONANIM TEST DÜZENEĞİ (TC UPLINK & TEST-RIG)
+            {t.commands.title}
           </h2>
         </div>
 
@@ -158,7 +209,7 @@ export const TacticalCommandPad: React.FC<TacticalCommandPadProps> = ({
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            CANLI FİZİK SİMÜLASYONU
+            {t.commands.liveSim}
           </button>
           <button
             onClick={() => handleModeChange('CSV_REPLAY')}
@@ -169,8 +220,18 @@ export const TacticalCommandPad: React.FC<TacticalCommandPadProps> = ({
             }`}
           >
             <FileSpreadsheet className="w-3.5 h-3.5" />
-            CSV FLIGHT REPLAY
+            {t.commands.csvReplay}
           </button>
+          {currentMode === 'CSV_REPLAY' && onRestartReplay && (
+            <button
+              onClick={handleRestart}
+              title={t.commands.restartReplay}
+              className="px-2 py-1 rounded cursor-pointer transition-colors bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-sky-300 flex items-center gap-1 border border-slate-700"
+            >
+              <RotateCcw className="w-3 h-3" />
+              <span>{t.commands.restartReplay}</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -198,7 +259,9 @@ export const TacticalCommandPad: React.FC<TacticalCommandPadProps> = ({
         {/* Stream Frequency Controls */}
         <div className="bg-slate-900/60 p-3 rounded border border-slate-800 flex flex-col justify-between">
           <div>
-            <span className="text-slate-400 block mb-2 text-[11px]">TELEMETRİ YAYIN FREKANSI</span>
+            <span className="text-slate-400 block mb-2 text-[11px] uppercase tracking-wider">
+              {t.commands.streamFrequency}
+            </span>
             <div className="flex gap-2">
               {[5, 10, 20, 50].map((hz) => (
                 <button
@@ -216,18 +279,24 @@ export const TacticalCommandPad: React.FC<TacticalCommandPadProps> = ({
             </div>
           </div>
           <span className="text-[10px] text-slate-500 mt-2 block">
-            {selectedRate === 50
-              ? '⚡ 50Hz: Gerçek zamanlı yüksek frekanslı test rigor'
-              : '🛰️ Standart yer istasyonu downlink hızı (10Hz)'}
+            {selectedRate === 50 ? `⚡ ${t.commands.hz50Note}` : `🛰️ ${t.commands.hzNote}`}
           </span>
         </div>
 
         {/* Fault Injection Panel */}
         <div className="bg-slate-900/60 p-3 rounded border border-slate-800">
-          <span className="text-slate-400 block mb-2 text-[11px]">ANOMALİ & ARIZA ENJEKSİYONU</span>
+          <span className="text-slate-400 block mb-2 text-[11px] uppercase tracking-wider">
+            {t.commands.anomalyTitle}
+          </span>
           <div className="grid grid-cols-2 gap-1.5">
             <button
-              onClick={() => handleInject('THERMAL_RUNAWAY', 'Termal Kaçak (>75°C) tetiklendi.')}
+              onClick={() =>
+                handleInject(
+                  'THERMAL_RUNAWAY',
+                  'Termal kaçak (>75°C) tetiklendi.',
+                  'Thermal runaway (>75°C) triggered.'
+                )
+              }
               className={`px-2 py-1.5 rounded transition-all text-left text-[11px] cursor-pointer flex items-center gap-1.5 border ${
                 activeAnomaly === 'THERMAL_RUNAWAY'
                   ? 'bg-rose-950 text-rose-200 border-rose-400 font-semibold animate-pulse'
@@ -235,11 +304,17 @@ export const TacticalCommandPad: React.FC<TacticalCommandPadProps> = ({
               }`}
             >
               <Flame className="w-3.5 h-3.5 text-rose-400 shrink-0" />
-              <span>Termal Kaçak</span>
+              <span>{t.commands.thermalRunaway}</span>
             </button>
 
             <button
-              onClick={() => handleInject('PRESSURE_DROP', 'İtki Kaybı (<90 bar) tetiklendi.')}
+              onClick={() =>
+                handleInject(
+                  'PRESSURE_DROP',
+                  'Yanma odası basınç kaybı (<90 bar) tetiklendi.',
+                  'Chamber pressure loss (<90 bar) triggered.'
+                )
+              }
               className={`px-2 py-1.5 rounded transition-all text-left text-[11px] cursor-pointer flex items-center gap-1.5 border ${
                 activeAnomaly === 'PRESSURE_DROP'
                   ? 'bg-amber-950 text-amber-200 border-amber-400 font-semibold animate-pulse'
@@ -247,11 +322,17 @@ export const TacticalCommandPad: React.FC<TacticalCommandPadProps> = ({
               }`}
             >
               <TrendingDown className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-              <span>İtki Kaybı</span>
+              <span>{t.commands.pressureDrop}</span>
             </button>
 
             <button
-              onClick={() => handleInject('VOLTAGE_SAG', 'Düşük Voltaj (<24V) tetiklendi.')}
+              onClick={() =>
+                handleInject(
+                  'VOLTAGE_SAG',
+                  'Ana bara düşük gerilim (<24V) tetiklendi.',
+                  'Main bus voltage sag (<24V) triggered.'
+                )
+              }
               className={`px-2 py-1.5 rounded transition-all text-left text-[11px] cursor-pointer flex items-center gap-1.5 border ${
                 activeAnomaly === 'VOLTAGE_SAG'
                   ? 'bg-purple-950 text-purple-200 border-purple-400 font-semibold animate-pulse'
@@ -259,11 +340,17 @@ export const TacticalCommandPad: React.FC<TacticalCommandPadProps> = ({
               }`}
             >
               <Zap className="w-3.5 h-3.5 text-purple-400 shrink-0" />
-              <span>Düşük Voltaj</span>
+              <span>{t.commands.voltageSag}</span>
             </button>
 
             <button
-              onClick={() => handleInject('PROPAGATION_BLACKOUT', 'Sinyal Kaybı (LOS) başlatıldı.')}
+              onClick={() =>
+                handleInject(
+                  'PROPAGATION_BLACKOUT',
+                  'Sinyal kaybı (LOS) başlatıldı.',
+                  'Signal loss (LOS) initiated.'
+                )
+              }
               className={`px-2 py-1.5 rounded transition-all text-left text-[11px] cursor-pointer flex items-center gap-1.5 border ${
                 activeAnomaly === 'PROPAGATION_BLACKOUT' || isLOS
                   ? 'bg-rose-950 text-rose-200 border-rose-400 font-semibold animate-pulse'
@@ -271,11 +358,17 @@ export const TacticalCommandPad: React.FC<TacticalCommandPadProps> = ({
               }`}
             >
               <Radio className="w-3.5 h-3.5 text-rose-400 shrink-0" />
-              <span>Sinyal Kaybı (LOS)</span>
+              <span>{t.commands.propagationBlackout}</span>
             </button>
 
             <button
-              onClick={() => handleInject('CORRUPTED_PACKET', 'CRC32 Bit-Flip anomali paketi tetiklendi.')}
+              onClick={() =>
+                handleInject(
+                  'CORRUPTED_PACKET',
+                  'CRC32 bit hatası enjekte edildi.',
+                  'CRC32 bit error injected.'
+                )
+              }
               className={`px-2 py-1.5 rounded transition-all text-left text-[11px] cursor-pointer flex items-center gap-1.5 border ${
                 activeAnomaly === 'CORRUPTED_PACKET'
                   ? 'bg-amber-950 text-amber-200 border-amber-400 font-semibold'
@@ -283,7 +376,7 @@ export const TacticalCommandPad: React.FC<TacticalCommandPadProps> = ({
               }`}
             >
               <Dice5 className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-              <span>CRC32 Bit-Flip</span>
+              <span>{t.commands.corruptedPacket}</span>
             </button>
 
             <button
@@ -291,7 +384,7 @@ export const TacticalCommandPad: React.FC<TacticalCommandPadProps> = ({
               className="px-2 py-1.5 rounded bg-emerald-950/50 hover:bg-emerald-900/60 border border-emerald-500/40 text-emerald-300 transition-colors text-left text-[11px] cursor-pointer font-semibold flex items-center gap-1.5"
             >
               <RotateCcw className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-              <span>Tümünü Temizle</span>
+              <span>{t.commands.clearAll}</span>
             </button>
           </div>
         </div>
@@ -300,19 +393,21 @@ export const TacticalCommandPad: React.FC<TacticalCommandPadProps> = ({
         <div className="bg-slate-900/60 p-3 rounded border border-slate-800 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-1">
-              <span className="text-slate-400 block text-[11px]">TWO-MAN RULE UPLINK</span>
+              <span className="text-slate-400 block text-[11px] uppercase tracking-wider">
+                {t.commands.twoManRule}
+              </span>
               {armedToken ? (
                 <span className="text-[10px] px-2 py-0.5 rounded bg-rose-950/80 border border-rose-500/40 text-rose-300 animate-pulse flex items-center gap-1">
-                  <Unlock className="w-3 h-3" /> SİLAHSIZLANDIRMA: {armCountdown}s
+                  <Unlock className="w-3 h-3" /> {t.commands.disarmIn} {armCountdown}s
                 </span>
               ) : (
                 <span className="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-400 flex items-center gap-1">
-                  <Lock className="w-3 h-3" /> KİLİTLİ
+                  <Lock className="w-3 h-3" /> {t.commands.locked}
                 </span>
               )}
             </div>
             <p className="text-[10px] text-slate-500 mb-2">
-              Kritik uçuş manevraları için iki adımlı güvenlik doğrulaması (Arm &amp; Fire).
+              {t.commands.twoManDesc}
             </p>
           </div>
 
@@ -322,7 +417,7 @@ export const TacticalCommandPad: React.FC<TacticalCommandPadProps> = ({
               className="w-full py-2 rounded bg-slate-800 hover:bg-rose-950/60 border border-slate-700 hover:border-rose-400/40 text-slate-300 hover:text-rose-200 transition-colors flex items-center justify-center gap-2 cursor-pointer font-semibold shadow-sm"
             >
               <ShieldAlert className="w-4 h-4 text-rose-400" />
-              <span>ACİL DURUM İPTALİNİ SİLAHLANDIR (ARM ABORT)</span>
+              <span>{t.commands.armAbort}</span>
             </button>
           ) : (
             <button
@@ -330,7 +425,7 @@ export const TacticalCommandPad: React.FC<TacticalCommandPadProps> = ({
               className="w-full py-2 rounded bg-rose-800 hover:bg-rose-700 border border-rose-600 text-white transition-colors flex items-center justify-center gap-2 cursor-pointer font-bold animate-pulse shadow-lg"
             >
               <AlertOctagon className="w-4 h-4" />
-              <span>ONAYLA &amp; FIRLAT (CONFIRM FIRE ABORT)</span>
+              <span>{t.commands.fireAbort}</span>
             </button>
           )}
         </div>
@@ -338,3 +433,4 @@ export const TacticalCommandPad: React.FC<TacticalCommandPadProps> = ({
     </div>
   );
 };
+

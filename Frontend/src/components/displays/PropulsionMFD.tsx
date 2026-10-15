@@ -1,6 +1,7 @@
 import { Line } from 'react-chartjs-2';
 import { Flame } from 'lucide-react';
 import type { PropulsionSubsystem, HistoryPoint } from '../../types/telemetry';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 interface PropulsionMFDProps {
   propulsion: PropulsionSubsystem | undefined;
@@ -9,16 +10,17 @@ interface PropulsionMFDProps {
 }
 
 export const PropulsionMFD: React.FC<PropulsionMFDProps> = ({ propulsion, history, isLOS }) => {
+  const { t } = useLanguage();
   const labels = history.map((h) => h.timeLabel);
   const pressureData = history.map((h) => h.chamberPressure);
 
-  const isLowPressure = (propulsion?.chamber_pressure_bar ?? 125) < 90.0 && (propulsion?.chamber_pressure_bar ?? 0) > 0;
+  const isLowPressure = (propulsion?.chamber_pressure_bar ?? 120) < 90.0 && (propulsion?.chamber_pressure_bar ?? 0) > 0;
 
   const chartData = {
     labels,
     datasets: [
       {
-        label: 'Yanma Odası Basıncı (bar)',
+        label: t.mfd.propulsion.pressureLabel,
         data: pressureData,
         borderColor: isLowPressure ? '#fda4af' : '#fdba74', // Pastel Şeftali veya Gül Kurusu
         backgroundColor: isLowPressure ? 'rgba(253, 164, 175, 0.08)' : 'rgba(253, 186, 116, 0.08)',
@@ -69,7 +71,7 @@ export const PropulsionMFD: React.FC<PropulsionMFDProps> = ({ propulsion, histor
         <div className="flex items-center gap-2">
           <Flame className="w-4 h-4 text-amber-300" />
           <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-200">
-            MFD 2: İTKİ & MOTOR BASINCI (PROPULSION)
+            {t.mfd.propulsion.title}
           </h2>
         </div>
         <span
@@ -79,14 +81,14 @@ export const PropulsionMFD: React.FC<PropulsionMFDProps> = ({ propulsion, histor
               : 'bg-slate-800/80 text-amber-300 border-slate-700/80'
           }`}
         >
-          {propulsion?.engine_state || 'ARMED'}
+          {isLowPressure ? t.mfd.propulsion.lowPressure : (propulsion?.engine_state || 'ARMED')}
         </span>
       </div>
 
       {/* Metrics Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3 text-xs font-mono-numbers">
         <div className="bg-slate-900/70 p-2.5 rounded border border-slate-800">
-          <span className="text-slate-400 block text-[10px]">YANMA BASINCI</span>
+          <span className="text-slate-400 block text-[10px]">{t.mfd.propulsion.chamberPressure}</span>
           <span
             className={`text-base font-semibold ${
               isLowPressure ? 'text-rose-300' : 'text-amber-200'
@@ -98,7 +100,7 @@ export const PropulsionMFD: React.FC<PropulsionMFDProps> = ({ propulsion, histor
         </div>
 
         <div className="bg-slate-900/70 p-2.5 rounded border border-slate-800">
-          <span className="text-slate-400 block text-[10px]">İTKİ KUVVETİ</span>
+          <span className="text-slate-400 block text-[10px]">{t.mfd.propulsion.thrust}</span>
           <span className="text-base font-semibold text-slate-200">
             {propulsion?.thrust_kn?.toFixed(1) ?? '220.0'}{' '}
             <span className="text-xs font-normal text-slate-400">kN</span>
@@ -106,7 +108,7 @@ export const PropulsionMFD: React.FC<PropulsionMFDProps> = ({ propulsion, histor
         </div>
 
         <div className="bg-slate-900/70 p-2.5 rounded border border-slate-800">
-          <span className="text-slate-400 block text-[10px]">YAKIT SICAKLIĞI</span>
+          <span className="text-slate-400 block text-[10px]">{t.mfd.propulsion.propellantTemp}</span>
           <span className="text-base font-semibold text-sky-200">
             {propulsion?.propellant_temp_c?.toFixed(1) ?? '-183.0'}{' '}
             <span className="text-xs font-normal text-slate-400">°C</span>
@@ -114,7 +116,7 @@ export const PropulsionMFD: React.FC<PropulsionMFDProps> = ({ propulsion, histor
         </div>
 
         <div className="bg-slate-900/70 p-2.5 rounded border border-slate-800">
-          <span className="text-slate-400 block text-[10px]">KALAN YAKIT</span>
+          <span className="text-slate-400 block text-[10px]">{t.mfd.propulsion.fuelRemaining}</span>
           <div className="flex items-center gap-1.5 mt-0.5">
             <div className="flex-1 bg-slate-800 rounded-full h-2 overflow-hidden">
               <div
@@ -132,7 +134,7 @@ export const PropulsionMFD: React.FC<PropulsionMFDProps> = ({ propulsion, histor
         {isLOS && (
           <div className="absolute inset-0 bg-slate-950/75 backdrop-blur-[1px] flex items-center justify-center z-10 rounded">
             <span className="text-[11px] font-mono-numbers px-2.5 py-1 rounded bg-rose-950/90 border border-rose-500/60 text-rose-300 font-semibold animate-pulse">
-              📡 SİNYAL KAYBI (LOS) - TELEMETRİ DONDURULDU
+              📡 {t.mfd.trajectory.signalLostOverlay}
             </span>
           </div>
         )}

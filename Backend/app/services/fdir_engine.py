@@ -32,6 +32,7 @@ class FDIREngine:
         battery_temp: float,
         chamber_pressure: float,
         bus_voltage: float,
+        checksum_valid: bool = True,
     ) -> FDIRStatus:
         self.cycles_evaluated += 1
         now_utc = datetime.now(timezone.utc).isoformat()
@@ -161,11 +162,30 @@ class FDIREngine:
                 del self.active_alarm_state[alarm_id_volt]
                 self.acknowledged_alarm_ids.discard(alarm_id_volt)
 
-        # Compute overall system status
+        # -------------------------------------------------------------
+        # 4. Communication Subsystem - CRC32 Frame Integrity Check
+        # -------------------------------------------------------------
         current_alarms = list(self.active_alarm_state.values())
+        if not checksum_valid:
+            current_alarms.append(
+                ActiveAlarm(
+                    alarm_id="ALM-COMM-01",
+                    subsystem="COMMUNICATION",
+                    parameter="crc32_checksum",
+                    severity=AlarmSeverity.WARNING,
+                    current_value=0.0,
+                    threshold_value=1.0,
+                    unit="bool",
+                    message="CRC32 Bit-Flip Hatası: Çerçeve sağlama uyuşmazlığı tespit edildi (SEU Radiation).",
+                    timestamp_utc=now_utc,
+                    acknowledged=False,
+                )
+            )
+
+        # Compute overall system status
         if any(a.severity == AlarmSeverity.CRITICAL for a in current_alarms):
             overall = AlarmSeverity.CRITICAL
-        elif any(a.severity == AlarmSeverity.WARNING for a in current_alarms):
+        elif any(a.severity == AlarmSeverity.WARNING for a in current_alarms) or not checksum_valid:
             overall = AlarmSeverity.WARNING
         elif any(a.severity == AlarmSeverity.CAUTION for a in current_alarms):
             overall = AlarmSeverity.CAUTION
@@ -175,7 +195,7 @@ class FDIREngine:
         return FDIRStatus(
             overall_status=overall,
             active_alarms=current_alarms,
-            checksum_valid=True,
+            checksum_valid=checksum_valid,
             fdir_cycles_evaluated=self.cycles_evaluated,
         )
 

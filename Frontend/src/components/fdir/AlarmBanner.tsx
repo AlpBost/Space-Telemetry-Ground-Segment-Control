@@ -1,6 +1,7 @@
 import React from 'react';
 import { AlertCircle, CheckCircle, BellOff } from 'lucide-react';
 import type { ActiveAlarm } from '../../types/telemetry';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 interface AlarmBannerProps {
   alarms: ActiveAlarm[];
@@ -8,6 +9,8 @@ interface AlarmBannerProps {
 }
 
 export const AlarmBanner: React.FC<AlarmBannerProps> = ({ alarms, onAcknowledge }) => {
+  const { t, language } = useLanguage();
+
   if (alarms.length === 0) {
     return null;
   }
@@ -46,18 +49,26 @@ export const AlarmBanner: React.FC<AlarmBannerProps> = ({ alarms, onAcknowledge 
                       isCritical ? 'bg-rose-500/20 text-rose-300' : 'bg-amber-500/20 text-amber-300'
                     }`}
                   >
-                    {alarm.severity}
+                    {isCritical ? t.common.critical : t.common.warning}
                   </span>
                 </div>
                 <p className="text-xs text-slate-300 mt-1 font-mono-numbers">
-                  {alarm.message} &bull; Güncel Değer:{' '}
+                  {alarm.message} &bull; {language === 'tr' ? 'Güncel Değer' : 'Current Value'}:{' '}
                   <span className="font-semibold text-white">
                     {alarm.current_value} {alarm.unit}
                   </span>{' '}
-                  (Eşik: {alarm.threshold_value} {alarm.unit})
+                  &bull; {language === 'tr' ? 'Eşik' : 'Threshold'}: {alarm.threshold_value} {alarm.unit}
                 </p>
                 <p className="text-[11px] text-slate-400 mt-0.5">
-                  🛡️ <span className="text-slate-300">Schmidt Trigger Histeresis Koruması:</span> Değer güvenli tolerans sınırına (örn. 71.5°C) inene kadar alarm bayrağı açık tutulacaktır.
+                  🛡️{' '}
+                  <span className="text-slate-300">
+                    {language === 'tr'
+                      ? 'Schmidt Trigger Histeresis Koruması:'
+                      : 'Schmidt Trigger Hysteresis Active:'}
+                  </span>{' '}
+                  {language === 'tr'
+                    ? 'Değer güvenli tolerans sınırına inene kadar alarm aktif tutulacaktır.'
+                    : 'Alarm flag remains raised until value returns safely within the deadband margin.'}
                 </p>
               </div>
             </div>
@@ -67,7 +78,7 @@ export const AlarmBanner: React.FC<AlarmBannerProps> = ({ alarms, onAcknowledge 
               {alarm.acknowledged ? (
                 <div className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-emerald-950/50 border border-emerald-500/30 text-emerald-300 text-xs font-mono-numbers">
                   <CheckCircle className="w-4 h-4" />
-                  <span>ACKNOWLEDGED (ONAYLANDI)</span>
+                  <span>{t.fdir.acknowledged}</span>
                 </div>
               ) : (
                 <button
@@ -79,7 +90,7 @@ export const AlarmBanner: React.FC<AlarmBannerProps> = ({ alarms, onAcknowledge 
                   }`}
                 >
                   <BellOff className="w-3.5 h-3.5" />
-                  <span>ONAYLA (ACK)</span>
+                  <span>{t.fdir.ackBtn}</span>
                 </button>
               )}
             </div>

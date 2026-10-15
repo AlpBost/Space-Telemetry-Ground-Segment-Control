@@ -1,6 +1,7 @@
 import { Line } from 'react-chartjs-2';
 import { Thermometer, Sun, Cpu, Battery } from 'lucide-react';
 import type { ThermalSubsystem, HistoryPoint } from '../../types/telemetry';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 interface ThermalMFDProps {
   thermal: ThermalSubsystem | undefined;
@@ -9,6 +10,7 @@ interface ThermalMFDProps {
 }
 
 export const ThermalMFD: React.FC<ThermalMFDProps> = ({ thermal, history, isLOS }) => {
+  const { t } = useLanguage();
   const labels = history.map((h) => h.timeLabel);
   const solarTempData = history.map((h) => h.solarTemp);
 
@@ -19,7 +21,7 @@ export const ThermalMFD: React.FC<ThermalMFDProps> = ({ thermal, history, isLOS 
     labels,
     datasets: [
       {
-        label: 'Güneş Paneli Sıcaklığı (°C)',
+        label: t.mfd.thermal.solarLabel,
         data: solarTempData,
         borderColor: isSolarHot ? '#fda4af' : '#6ee7b7', // Pastel Rose veya Pastel Mint
         backgroundColor: isSolarHot ? 'rgba(253, 164, 175, 0.08)' : 'rgba(110, 231, 183, 0.08)',
@@ -68,7 +70,7 @@ export const ThermalMFD: React.FC<ThermalMFDProps> = ({ thermal, history, isLOS 
         <div className="flex items-center gap-2">
           <Thermometer className="w-4 h-4 text-emerald-300" />
           <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-200">
-            MFD 3: TERMAL DAĞILIM (THERMAL MATRIX)
+            {t.mfd.thermal.title}
           </h2>
         </div>
         <span
@@ -78,7 +80,7 @@ export const ThermalMFD: React.FC<ThermalMFDProps> = ({ thermal, history, isLOS 
               : 'bg-slate-800/80 text-emerald-300 border-slate-700/80'
           }`}
         >
-          {isSolarHot ? 'ALARM: >75.0°C' : 'THERMAL NOMINAL'}
+          {isSolarHot ? t.mfd.thermal.alarmHot : t.mfd.thermal.nominal}
         </span>
       </div>
 
@@ -86,7 +88,7 @@ export const ThermalMFD: React.FC<ThermalMFDProps> = ({ thermal, history, isLOS 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3 text-xs font-mono-numbers">
         <div className="bg-slate-900/70 p-2.5 rounded border border-slate-800">
           <span className="text-slate-400 block text-[10px] flex items-center gap-1">
-            <Sun className="w-3 h-3 text-amber-300" /> GÜNEŞ PANELİ
+            <Sun className="w-3 h-3 text-amber-300" /> {t.mfd.thermal.solarArray}
           </span>
           <span
             className={`text-base font-semibold ${
@@ -99,7 +101,7 @@ export const ThermalMFD: React.FC<ThermalMFDProps> = ({ thermal, history, isLOS 
 
         <div className="bg-slate-900/70 p-2.5 rounded border border-slate-800">
           <span className="text-slate-400 block text-[10px] flex items-center gap-1">
-            <Cpu className="w-3 h-3 text-sky-300" /> AVİYONİK
+            <Cpu className="w-3 h-3 text-sky-300" /> {t.mfd.thermal.avionics}
           </span>
           <span className="text-base font-semibold text-slate-200">
             {thermal?.avionics_temp_c?.toFixed(1) ?? '38.5'}{' '}
@@ -109,7 +111,7 @@ export const ThermalMFD: React.FC<ThermalMFDProps> = ({ thermal, history, isLOS 
 
         <div className="bg-slate-900/70 p-2.5 rounded border border-slate-800">
           <span className="text-slate-400 block text-[10px] flex items-center gap-1">
-            <Battery className="w-3 h-3 text-purple-300" /> BATARYA HÜCRESİ
+            <Battery className="w-3 h-3 text-purple-300" /> {t.mfd.thermal.batteryCell}
           </span>
           <span className="text-base font-semibold text-purple-200">
             {thermal?.battery_cell_temp_c?.toFixed(1) ?? '28.0'}{' '}
@@ -118,7 +120,7 @@ export const ThermalMFD: React.FC<ThermalMFDProps> = ({ thermal, history, isLOS 
         </div>
 
         <div className="bg-slate-900/70 p-2.5 rounded border border-slate-800">
-          <span className="text-slate-400 block text-[10px]">NOZUL BOĞAZI</span>
+          <span className="text-slate-400 block text-[10px]">{t.mfd.thermal.nozzleThroat}</span>
           <span className="text-base font-semibold text-slate-300">
             {thermal?.nozzle_throat_temp_c?.toFixed(0) ?? '640'}{' '}
             <span className="text-xs font-normal text-slate-400">°C</span>
@@ -131,7 +133,7 @@ export const ThermalMFD: React.FC<ThermalMFDProps> = ({ thermal, history, isLOS 
         {isLOS && (
           <div className="absolute inset-0 bg-slate-950/75 backdrop-blur-[1px] flex items-center justify-center z-10 rounded">
             <span className="text-[11px] font-mono-numbers px-2.5 py-1 rounded bg-rose-950/90 border border-rose-500/60 text-rose-300 font-semibold animate-pulse">
-              📡 SİNYAL KAYBI (LOS) - TELEMETRİ DONDURULDU
+              📡 {t.mfd.trajectory.signalLostOverlay}
             </span>
           </div>
         )}

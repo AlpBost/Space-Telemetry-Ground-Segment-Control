@@ -48,16 +48,19 @@ class NetworkPhysicsEngine:
 
         return spacecraft_utc, ground_station_utc, round(self.clock_drift_ppm, 2)
 
-    def compute_crc32(self, payload_str: str) -> str:
+    def compute_crc32(self, payload_str: str) -> tuple[str, bool]:
         """
         Computes 32-bit Cyclic Redundancy Check (CRC32).
         If corrupt_next_packet is True, introduces a bit-flip to simulate space radiation SEU.
+        Returns a tuple of (crc32_hex_string, is_valid).
         """
         crc = zlib.crc32(payload_str.encode("utf-8")) & 0xFFFFFFFF
+        is_valid = True
         if self.corrupt_next_packet:
             self.corrupt_next_packet = False
             crc ^= 0x00000001  # Flip least significant bit
-        return f"0x{crc:08X}"
+            is_valid = False
+        return f"0x{crc:08X}", is_valid
 
     def set_los_blackout(self, active: bool):
         self.simulate_los = active

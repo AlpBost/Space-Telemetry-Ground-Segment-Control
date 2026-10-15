@@ -1,6 +1,7 @@
 import { Line } from 'react-chartjs-2';
 import { Zap } from 'lucide-react';
 import type { ElectricalSubsystem, HistoryPoint } from '../../types/telemetry';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 interface PowerMFDProps {
   electrical: ElectricalSubsystem | undefined;
@@ -9,6 +10,7 @@ interface PowerMFDProps {
 }
 
 export const PowerMFD: React.FC<PowerMFDProps> = ({ electrical, history, isLOS }) => {
+  const { t } = useLanguage();
   const labels = history.map((h) => h.timeLabel);
   const voltageData = history.map((h) => h.busVoltage);
 
@@ -19,7 +21,7 @@ export const PowerMFD: React.FC<PowerMFDProps> = ({ electrical, history, isLOS }
     labels,
     datasets: [
       {
-        label: 'Ana Bara Gerilimi (V)',
+        label: t.mfd.electrical.voltageLabel,
         data: voltageData,
         borderColor: isLowVoltage ? '#fda4af' : '#c4b5fd', // Pastel Leylak veya Rose
         backgroundColor: isLowVoltage ? 'rgba(253, 164, 175, 0.08)' : 'rgba(196, 181, 253, 0.08)',
@@ -70,7 +72,7 @@ export const PowerMFD: React.FC<PowerMFDProps> = ({ electrical, history, isLOS }
         <div className="flex items-center gap-2">
           <Zap className="w-4 h-4 text-purple-300" />
           <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-200">
-            MFD 4: GÜÇ SİSTEMİ (ELECTRICAL POWER - EPS)
+            {t.mfd.electrical.title}
           </h2>
         </div>
         <span
@@ -80,14 +82,14 @@ export const PowerMFD: React.FC<PowerMFDProps> = ({ electrical, history, isLOS }
               : 'bg-slate-800/80 text-purple-300 border-slate-700/80'
           }`}
         >
-          {isLowVoltage ? 'UNDER-VOLTAGE ALARM' : 'BUS NOMINAL (28V)'}
+          {isLowVoltage ? t.mfd.electrical.underVoltageAlarm : t.mfd.electrical.nominal}
         </span>
       </div>
 
       {/* Metrics Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3 text-xs font-mono-numbers">
         <div className="bg-slate-900/70 p-2.5 rounded border border-slate-800">
-          <span className="text-slate-400 block text-[10px]">BARA VOLTAJI</span>
+          <span className="text-slate-400 block text-[10px]">{t.mfd.electrical.busVoltage}</span>
           <span
             className={`text-base font-semibold ${
               isLowVoltage ? 'text-rose-300' : 'text-purple-200'
@@ -98,7 +100,7 @@ export const PowerMFD: React.FC<PowerMFDProps> = ({ electrical, history, isLOS }
         </div>
 
         <div className="bg-slate-900/70 p-2.5 rounded border border-slate-800">
-          <span className="text-slate-400 block text-[10px]">BARA AKIMI</span>
+          <span className="text-slate-400 block text-[10px]">{t.mfd.electrical.busCurrent}</span>
           <span className="text-base font-semibold text-slate-200">
             {electrical?.bus_current_a?.toFixed(1) ?? '14.2'}{' '}
             <span className="text-xs font-normal text-slate-400">A</span>
@@ -106,7 +108,7 @@ export const PowerMFD: React.FC<PowerMFDProps> = ({ electrical, history, isLOS }
         </div>
 
         <div className="bg-slate-900/70 p-2.5 rounded border border-slate-800">
-          <span className="text-slate-400 block text-[10px]">BATARYA DOLULUK</span>
+          <span className="text-slate-400 block text-[10px]">{t.mfd.electrical.batterySoc}</span>
           <div className="flex items-center gap-1.5 mt-0.5">
             <div className="flex-1 bg-slate-800 rounded-full h-2 overflow-hidden">
               <div
@@ -119,7 +121,7 @@ export const PowerMFD: React.FC<PowerMFDProps> = ({ electrical, history, isLOS }
         </div>
 
         <div className="bg-slate-900/70 p-2.5 rounded border border-slate-800">
-          <span className="text-slate-400 block text-[10px]">GÜNEŞ PANEL ÜRETİMİ</span>
+          <span className="text-slate-400 block text-[10px]">{t.mfd.electrical.solarGen}</span>
           <span className="text-base font-semibold text-slate-300">
             {electrical?.solar_generation_w?.toFixed(0) ?? '1420'}{' '}
             <span className="text-xs font-normal text-slate-400">W</span>
@@ -132,7 +134,7 @@ export const PowerMFD: React.FC<PowerMFDProps> = ({ electrical, history, isLOS }
         {isLOS && (
           <div className="absolute inset-0 bg-slate-950/75 backdrop-blur-[1px] flex items-center justify-center z-10 rounded">
             <span className="text-[11px] font-mono-numbers px-2.5 py-1 rounded bg-rose-950/90 border border-rose-500/60 text-rose-300 font-semibold animate-pulse">
-              📡 SİNYAL KAYBI (LOS) - TELEMETRİ DONDURULDU
+              📡 {t.mfd.trajectory.signalLostOverlay}
             </span>
           </div>
         )}
